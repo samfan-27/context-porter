@@ -26,4 +26,5 @@ context-porter/
         ├── dom.ts
         ├── extractor.ts
         ├── markdown.ts
+        ├── serializer.ts
         └── types.ts
