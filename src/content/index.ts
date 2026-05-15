@@ -1,44 +1,30 @@
-import { extractFallbackText } from '../shared/dom';
-import { buildMarkdown } from '../shared/markdown';
+import { extractConversationSnapshot } from '../shared/extractor';
 import type { ConversationSnapshot } from '../shared/types';
-import { chatgptAdapter, extractChatgptText } from './chatgpt';
-import { claudeAdapter, extractClaudeText } from './claude';
+import { chatgptAdapter } from './chatgpt';
+import { claudeAdapter } from './claude';
 
-function detectSite(hostname: string): 'chatgpt' | 'claude' | 'unknown' {
-  if (chatgptAdapter.hostnames.includes(hostname)) return 'chatgpt';
-  if (claudeAdapter.hostnames.includes(hostname)) return 'claude';
-  return 'unknown';
-}
-
-function extractPageText(site: 'chatgpt' | 'claude' | 'unknown', doc: Document): string {
-  if (site === 'chatgpt') return extractChatgptText(doc);
-  if (site === 'claude') return extractClaudeText(doc);
-  return extractFallbackText(doc);
+function detectAdapter(hostname: string) {
+  if (chatgptAdapter.hostnames.includes(hostname)) return chatgptAdapter;
+  if (claudeAdapter.hostnames.includes(hostname)) return claudeAdapter;
+  return null;
 }
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (!message || message.type !== 'CP_CAPTURE_PAGE') return;
 
-  const site = detectSite(window.location.hostname);
-  const capturedAt = new Date().toISOString();
-  const rawText = extractPageText(site, document);
-  const title = document.title || 'Untitled page';
-  const url = window.location.href;
+  const adapter = detectAdapter(window.location.hostname);
 
-  const snapshot: ConversationSnapshot = {
-    site,
-    title,
-    url,
-    capturedAt,
-    rawText,
-    markdown: buildMarkdown({
-      site,
-      title,
-      url,
-      capturedAt,
-      rawText,
-    }),
-  };
+  const snapshot: ConversationSnapshot = adapter
+    ? extractConversationSnapshot(adapter.site, document, adapter)
+    : {
+        site: 'unknown',
+        title: document.title || 'Untitled page',
+        url: window.location.href,
+        capturedAt: new Date().toISOString(),
+        turns: [],
+        rawText: document.body?.innerText ?? '',
+        markdown: document.body?.innerText ?? '',
+      };
 
   sendResponse(snapshot);
 });
