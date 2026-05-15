@@ -22,6 +22,8 @@ context-porter/
     ├── service-worker/
     │   └── index.ts
     └── shared/
+        ├── adapter.ts
         ├── dom.ts
+        ├── extractor.ts
         ├── markdown.ts
         └── types.ts
