@@ -4,6 +4,16 @@ import manifest from './manifest.config';
 
 export default defineConfig({
   plugins: [crx({ manifest })],
+  server: {
+    port: 5173,
+    strictPort: true,
+    cors: {
+      origin: [/chrome-extension:\/\//]
+    },
+    hmr: {
+      port: 5173,
+    },
+  },
   build: {
     outDir: 'dist',
     emptyOutDir: true,
