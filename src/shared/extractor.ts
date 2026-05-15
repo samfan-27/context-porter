@@ -24,14 +24,13 @@ function buildTurn(
   adapter: SiteAdapter
 ): ConversationTurn {
   const role = adapter.resolveRole(turnEl);
-  const rawText = normalizeWhitespace(adapter.extractContent(turnEl, role));
-  const content = rawText;
+  const extracted = adapter.extractContent(turnEl, role).trim();
 
   return {
     index,
     role,
-    content,
-    rawText,
+    content: extracted,
+    rawText: extracted,
     sourceSelector: getMatchedSelector(turnEl, adapter.selectors.turn),
   };
 }

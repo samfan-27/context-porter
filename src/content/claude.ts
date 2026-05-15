@@ -1,4 +1,4 @@
-import { getTextFromSelectors, normalizeWhitespace } from '../shared/dom';
+import { serializeMarkdownFromNode } from '../shared/serializer';
 import type { Role, SiteAdapter } from '../shared/types';
 
 function resolveClaudeRole(turnRoot: Element): Role {
@@ -22,14 +22,18 @@ function resolveClaudeRole(turnRoot: Element): Role {
 
 function extractClaudeContent(turnRoot: Element, role: Role): string {
   if (role === 'user') {
-    return getTextFromSelectors(turnRoot, ['[data-testid="user-message"]']);
+    return serializeMarkdownFromNode(
+      turnRoot.querySelector('[data-testid="user-message"]')
+    );
   }
 
   if (role === 'assistant') {
-    return getTextFromSelectors(turnRoot, ['.standard-markdown']);
+    return serializeMarkdownFromNode(
+      turnRoot.querySelector('.standard-markdown')
+    );
   }
 
-  return normalizeWhitespace(turnRoot.textContent ?? '');
+  return turnRoot.textContent?.trim() ?? '';
 }
 
 export const claudeAdapter: SiteAdapter = {
@@ -37,7 +41,7 @@ export const claudeAdapter: SiteAdapter = {
   hostnames: ['claude.ai'],
   selectors: {
     root: ['main', '[role="main"]'],
-    turn: ['[data-user-message-bubble="true"]', '[data-is-streaming]'],
+    turn: ['[data-user-message-bubble="true"]', '[data-is-streaming="false"]'],
   },
   resolveRole: resolveClaudeRole,
   extractContent: extractClaudeContent,
